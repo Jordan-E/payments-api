@@ -7,7 +7,7 @@
 import { Generated } from "kysely";
 
 export interface Database {
-  person: PaymentsTable;
+  payments: PaymentsTable;
 }
 
 export interface PaymentsTable {
