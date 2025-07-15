@@ -1,8 +1,13 @@
 import express, { Request, Response, json } from "express";
-import { RecordTypeSchema, StatusSchema } from "./models/records.model";
+import {
+  RecordTypeSchema,
+  StatusSchema,
+  RecordsSchema,
+} from "./models/records.model";
 import { db } from "./db/database";
 import { SelectablePaymentsTable } from "./db/databaseTypes";
 import { logger } from "./utils/logger";
+import { z } from "zod";
 
 export const app = express();
 
@@ -33,10 +38,12 @@ app.get("/records", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid status" });
 
   let records: SelectablePaymentsTable[] | undefined = undefined;
-  const query = db.selectFrom("payments").selectAll();
+  let query = db.selectFrom("payments").selectAll();
 
-  if (recordType.data) query.where("Record_type", "=", recordType.data);
-  if (status.data) query.where("Status", "=", status.data);
+  if (recordType.data) query = query.where("Record_type", "=", recordType.data);
+  if (status.data) query = query.where("Status", "=", status.data);
+
+  logger.debug("Executing query:", query.compile().sql);
 
   try {
     records = await query.execute();
@@ -65,8 +72,29 @@ app.get("/records", async (req: Request, res: Response) => {
  * The request body should contain the record data.
  */
 app.post("/records", async (req: Request, res: Response) => {
-  throw new Error("To be implemented");
-  res.status(201).json({ message: "Records created successfully" });
+  logger.info("Received request to add records");
+  const records = RecordsSchema.safeParse(req.body);
+
+  if (!records.success)
+    return res.status(400).json({
+      error: `Invalid data format. ${z.prettifyError(records.error)}`,
+    });
+
+  db.transaction().execute(async (trx) => {
+    for (const record of records.data) {
+      await trx
+        .insertInto("payments")
+        .values({
+          Total: parseFloat(record.total.toFixed(2)),
+          Record_type: record.recordType,
+          Status: record.status,
+          Create_date: new Date().toISOString(),
+          Modified_date: new Date().toISOString(),
+        })
+        .execute();
+    }
+    res.status(201).json({ message: "Records created successfully" });
+  });
 });
 
 const PORT = 3000;

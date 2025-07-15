@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
     "db": "ts-node migrations/20250715_001_records.ts",
+    "dbRecords": "ts-node migrations/20250715_001_addRecords.ts",
     "test": "jest --verbose"
   },
   "repository": {
