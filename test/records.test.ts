@@ -68,7 +68,6 @@ afterAll(async () => {
   await db.deleteFrom("payments").execute();
 });
 
-// End point testing the most basic fetching of records.
 describe("Get records no data", () => {
   it("Get no data", async () => {
     const res = await request(app).get("/records");
@@ -116,7 +115,6 @@ describe("Get records with filter url params only test response code", () => {
   });
 });
 
-// TODO: Add data and check this was largely boilerplate. I ran out of time.
 describe("Get records with filter url params check data", () => {
   beforeAll(async () => {
     await db.insertInto("payments").values(defaultRecords).execute();
