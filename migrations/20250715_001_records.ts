@@ -22,7 +22,9 @@ export async function createDatabase() {
 async function createPaymentsTable(db: Kysely<Database>) {
   await db.schema
     .createTable("payments")
-    .addColumn("ID", "bigint", (col) => col.primaryKey().autoIncrement())
+    // SQLite doesn't alloow the use of `bigint` as a primary key.
+    // SqliteError: AUTOINCREMENT is only allowed on an INTEGER PRIMARY KEY
+    .addColumn("ID", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("Total", "real")
     .addColumn("Record_type", "text", (col) => col.notNull())
     .addColumn("Status", "text", (col) => col.notNull())
