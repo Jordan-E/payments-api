@@ -1,17 +1,14 @@
-import { Database } from "./databaseTypes"; // this is the Database interface we defined earlier
+import { Database } from "./databaseTypes";
 import SQLite from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 
-// Using keysly as query builder and ORM for SQLite database.
+// Using keysly as query builder and ORM for SQLite database. For this exercise for speed I have used a file as the db.
+// This is also very useful for testing purposes.
 // https://kysely.dev/docs/intro
 const dialect = new SqliteDialect({
-  database: new SQLite(":memory:"),
+  database: new SQLite(".database.db"),
 });
 
-// Database interface is passed to Kysely's constructor, and from now on, Kysely
-// knows your database structure.
-// Dialect is passed to Kysely's constructor, and from now on, Kysely knows how
-// to communicate with your database.
 export const db = new Kysely<Database>({
   dialect,
 });
