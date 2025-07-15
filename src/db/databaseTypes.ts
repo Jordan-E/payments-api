@@ -4,14 +4,7 @@
  * But with the time crunch this is a faster solution.
  */
 
-import {
-  ColumnType,
-  Generated,
-  Insertable,
-  JSONColumnType,
-  Selectable,
-  Updateable,
-} from "kysely";
+import { Generated } from "kysely";
 
 export interface Database {
   person: PaymentsTable;
@@ -19,8 +12,9 @@ export interface Database {
 
 export interface PaymentsTable {
   id: Generated<number>;
-  first_name: string;
-  gender: "man" | "woman" | "other";
-  last_name: string | null;
-  created_at: ColumnType<Date, string | undefined, never>;
+  total: number;
+  record_type: "invoice" | "bill" | "none";
+  status: "pending" | "void" | "completed";
+  create_date: string;
+  modified_date: string;
 }
