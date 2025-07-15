@@ -1,0 +1,106 @@
+import { logger } from "../utils/logger";
+import { Request, Response } from "express";
+import {
+  RecordTypeSchema,
+  StatusSchema,
+  RecordsSchema,
+} from "../models/records.model";
+import { db } from "../db/database";
+import { SelectablePaymentsTable } from "../db/databaseTypes";
+import { z } from "zod";
+
+interface RecordReturned {
+  id: number;
+  total: number;
+  recordType: string;
+  status: string;
+  modifiedDate: string;
+}
+
+/**
+ *
+ * @param req Express Request object
+ * @param res Express Response object
+ * @returns RecordReturned[]
+ */
+export async function getRecords(
+  req: Request,
+  res: Response
+): Promise<RecordReturned[] | void> {
+  logger.info("Records get endpoint");
+
+  const recordType = RecordTypeSchema.safeParse(req.query.recordType);
+  if (req.query.recordType && !recordType.success) {
+    res.status(400).json({ error: "Invalid record type" });
+    return;
+  }
+
+  const status = StatusSchema.safeParse(req.query.status);
+  if (req.query.status && !status.success) {
+    res.status(400).json({ error: "Invalid status" });
+    return;
+  }
+  let records: SelectablePaymentsTable[] | undefined = undefined;
+  let query = db.selectFrom("payments").selectAll();
+
+  if (recordType.data) query = query.where("Record_type", "=", recordType.data);
+  if (status.data) query = query.where("Status", "=", status.data);
+
+  logger.debug("Executing query:", query.compile().sql);
+
+  try {
+    records = await query.execute();
+  } catch (error) {
+    logger.error("Error executing query:", error);
+    res.status(500).json({ error: "Query Error" });
+    return;
+  }
+
+  const formattedRecord: RecordReturned[] = records.map((rec) => {
+    return {
+      id: rec.ID,
+      total: rec.Total,
+      recordType: rec.Record_type,
+      status: rec.Status,
+      modifiedDate: rec.Modified_date,
+    };
+  });
+
+  logger.debug("Formatted records:", formattedRecord);
+
+  res.status(200).json(formattedRecord);
+}
+
+/**
+ *
+ * @param req Express Request object
+ * @param res Express Response object
+ * @returns Promise<void>
+ */
+export async function createRecord(req: Request, res: Response): Promise<void> {
+  logger.info("Received request to add records");
+  const records = RecordsSchema.safeParse(req.body);
+
+  if (!records.success) {
+    res.status(400).json({
+      error: `Invalid data format. ${z.prettifyError(records.error)}`,
+    });
+    return;
+  }
+
+  db.transaction().execute(async (trx) => {
+    for (const record of records.data) {
+      await trx
+        .insertInto("payments")
+        .values({
+          Total: parseFloat(record.total.toFixed(2)),
+          Record_type: record.recordType,
+          Status: record.status,
+          Create_date: new Date().toISOString(),
+          Modified_date: new Date().toISOString(),
+        })
+        .execute();
+    }
+    res.status(201).json({ message: "Records created successfully" });
+  });
+}
