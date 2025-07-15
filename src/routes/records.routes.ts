@@ -9,6 +9,7 @@ import { db } from "../db/database";
 import { SelectablePaymentsTable } from "../db/databaseTypes";
 import { z } from "zod";
 
+// Interface used to define the structure of the returned records in the post endpoint
 interface RecordReturned {
   id: number;
   total: number;
