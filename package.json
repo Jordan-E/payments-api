@@ -16,12 +16,14 @@
   "type": "commonjs",
   "homepage": "https://github.com/Jordan-E/payments-api#readme",
   "dependencies": {
+    "better-sqlite3": "^12.2.0",
     "express": "^5.1.0",
     "jest": "^30.0.4",
     "kysely": "^0.28.2",
     "zod": "^4.0.5"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.13",
