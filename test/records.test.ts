@@ -20,7 +20,7 @@ afterAll(async () => {
 
 describe("Getting records", () => {
   it("Get no data", async () => {
-    const res = await request(app).get("/records").query({});
+    const res = await request(app).get("/records");
     expect(res.statusCode).toBe(200);
   });
 

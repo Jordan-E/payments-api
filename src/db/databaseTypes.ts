@@ -4,7 +4,7 @@
  * But with the time crunch this is a faster solution.
  */
 
-import { Generated } from "kysely";
+import { Generated, Selectable } from "kysely";
 
 export interface Database {
   payments: PaymentsTable;
@@ -18,3 +18,5 @@ export interface PaymentsTable {
   create_date: string;
   modified_date: string;
 }
+
+export type SelectablePaymentsTable = Selectable<PaymentsTable>;

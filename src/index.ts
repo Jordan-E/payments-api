@@ -1,6 +1,7 @@
 import express, { Request, Response, json } from "express";
 import { RecordTypeSchema, StatusSchema } from "./models/records.model";
 import { db } from "./db/database";
+import { SelectablePaymentsTable } from "./db/databaseTypes";
 
 export const app = express();
 
@@ -27,7 +28,13 @@ app.get("/records", async (req: Request, res: Response) => {
   const status = StatusSchema.safeParse(req.query.status);
   if (!status.success) return res.status(400).json({ error: "Invalid status" });
 
-  const records = await db.selectFrom("payments").selectAll().execute();
+  let records: SelectablePaymentsTable[] | undefined = undefined;
+  try {
+    records = await db.selectFrom("payments").selectAll().execute();
+  } catch (error) {
+    console.error("Database query error:", error);
+    return res.status(500).json({ error: "Query Error" });
+  }
 
   const formattedRecord = records.map((record) => ({
     total: record.total,
