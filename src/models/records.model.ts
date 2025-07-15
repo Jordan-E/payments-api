@@ -11,6 +11,7 @@ const RecordSchema = z.object({
 });
 
 export const RecordsSchema = z.array(RecordSchema);
+
 export type Record = z.infer<typeof RecordSchema>;
 export type Records = z.infer<typeof RecordSchema>;
 

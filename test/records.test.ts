@@ -2,6 +2,7 @@ import { db } from "../src/db/database";
 import { InsertablePaymentsTable } from "../src/db/databaseTypes";
 import { app } from "../src/index";
 import request from "supertest";
+import { Record } from "../src/models/records.model";
 
 const defaultRecord: InsertablePaymentsTable = {
   Total: 100,
@@ -32,6 +33,30 @@ const defaultRecords: InsertablePaymentsTable[] = [
     Status: "pending",
     Create_date: new Date().toISOString(),
     Modified_date: new Date().toISOString(),
+  },
+];
+
+const defaultInsertRecord: Record = {
+  total: 100,
+  recordType: "bill",
+  status: "pending",
+};
+
+const defaultInsertRecords: Record[] = [
+  {
+    total: 400,
+    recordType: "invoice",
+    status: "pending",
+  },
+  {
+    total: 200,
+    recordType: "invoice",
+    status: "completed",
+  },
+  {
+    total: 300,
+    recordType: "none",
+    status: "pending",
   },
 ];
 
@@ -149,5 +174,37 @@ describe("Get records with filter url params check data", () => {
   });
 });
 
-describe("Adding records", () => {});
+describe("Adding records", () => {
+  beforeAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterEach(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+
+  it("Add a single record", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([defaultInsertRecord])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(201);
+
+    const records = await db.selectFrom("payments").selectAll().execute();
+    expect(records).toHaveLength(1);
+  });
+
+  it("Add multiple records", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send(defaultInsertRecords)
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(201);
+
+    const records = await db.selectFrom("payments").selectAll().execute();
+    expect(records).toHaveLength(defaultInsertRecords.length);
+  });
+});
 describe("Adding invalid records", () => {});
