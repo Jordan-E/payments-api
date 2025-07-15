@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
+    "db": "ts-node migrations/20250715_001_records.ts",
     "test": "jest"
   },
   "repository": {
