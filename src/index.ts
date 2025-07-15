@@ -22,11 +22,12 @@ app.get("/", (_req: Request, res: Response) => {
  */
 app.get("/records", async (req: Request, res: Response) => {
   const recordType = RecordTypeSchema.safeParse(req.query.recordType);
-  if (!recordType.success)
+  if (req.query.recordType && !recordType.success)
     return res.status(400).json({ error: "Invalid record type" });
 
   const status = StatusSchema.safeParse(req.query.status);
-  if (!status.success) return res.status(400).json({ error: "Invalid status" });
+  if (req.query.status && !status.success)
+    return res.status(400).json({ error: "Invalid status" });
 
   let records: SelectablePaymentsTable[] | undefined = undefined;
   try {
