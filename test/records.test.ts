@@ -275,6 +275,22 @@ describe("Adding invalid records", () => {
       "Invalid data format. ✖ Invalid input: expected number, received null\n  → at [0].total"
     );
   });
+
+  // test adding one record that is valid one that is not and then another that is
+  it("Add a mix of valid and invalid records", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([
+        { total: 100, recordType: "bill", status: "pending" },
+        { total: "invalid", recordType: "invoice", status: "completed" },
+        { total: 200, recordType: "none", status: "pending" },
+      ])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeDefined();
+    const records = await db.selectFrom("payments").selectAll().execute();
+    expect(records).toHaveLength(0);
+  });
 });
 
 describe("Adding records with total more than 3 decimal places", () => {
