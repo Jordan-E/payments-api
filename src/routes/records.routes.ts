@@ -106,32 +106,31 @@ export async function createRecord(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  db.transaction().execute(async (trx) => {
+  const trx = await db.startTransaction().execute();
+
+  try {
     for (const record of records.data) {
-      logger.debug(`Inserting record: ${JSON.stringify(record)}`);
-      try {
-        await trx
-          .insertInto("payments")
-          .values({
-            Total: parseFloat(record.total.toFixed(2)),
-            Record_type: record.recordType,
-            Status: record.status,
-            Create_date: new Date().toISOString(),
-            Modified_date: new Date().toISOString(),
-          })
-          .execute();
-        logger.info(`Record inserted successfully: ${JSON.stringify(record)}`);
-      } catch (error) {
-        logger.error(
-          `Error inserting record: ${JSON.stringify(record)}. Error: ${error}`
-        );
-        res.status(500).json({
-          error: `Error inserting record: ${JSON.stringify(
-            record
-          )}. Error: ${error}`,
-        });
-      }
+      await trx
+        .insertInto("payments")
+        .values({
+          Total: parseFloat(record.total.toFixed(2)),
+          Record_type: record.recordType,
+          Status: record.status,
+          Create_date: new Date().toISOString(),
+          Modified_date: new Date().toISOString(),
+        })
+        .execute();
     }
-    res.status(201).json({ message: "Records created successfully" });
-  });
+
+    await trx.commit().execute();
+  } catch (error) {
+    await trx.rollback().execute();
+    logger.error(`Error inserting records. Error: ${error}`);
+    res.status(500).json({
+      error: `Error inserting records. Error: ${error}`,
+    });
+    return;
+  }
+
+  res.status(201).json({ message: "Records created successfully" });
 }
