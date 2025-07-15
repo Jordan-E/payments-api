@@ -10,4 +10,9 @@ const transport = pino.transport({
   ],
 });
 
-export const logger = pino(transport);
+export const logger = pino(
+  {
+    level: "info",
+  },
+  transport
+);

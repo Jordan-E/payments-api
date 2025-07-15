@@ -1,14 +1,64 @@
 import { db } from "../src/db/database";
+import { InsertablePaymentsTable } from "../src/db/databaseTypes";
 import { app } from "../src/index";
 import request from "supertest";
 import { Record } from "../src/models/records.model";
-import { record } from "zod";
 
-const defaultRecord: Record = {
+const defaultRecord: InsertablePaymentsTable = {
+  Total: 100,
+  Record_type: "bill", // Ensure the type matches the expected values
+  Status: "pending",
+  Create_date: new Date().toISOString(),
+  Modified_date: new Date().toISOString(),
+};
+
+const defaultRecords: InsertablePaymentsTable[] = [
+  {
+    Total: 400,
+    Record_type: "invoice",
+    Status: "pending",
+    Create_date: new Date().toISOString(),
+    Modified_date: new Date().toISOString(),
+  },
+  {
+    Total: 200,
+    Record_type: "invoice",
+    Status: "completed",
+    Create_date: new Date().toISOString(),
+    Modified_date: new Date().toISOString(),
+  },
+  {
+    Total: 300,
+    Record_type: "none",
+    Status: "pending",
+    Create_date: new Date().toISOString(),
+    Modified_date: new Date().toISOString(),
+  },
+];
+
+const defaultInsertRecord: Record = {
   total: 100,
-  recordType: "bill", // Ensure the type matches the expected values
+  recordType: "bill",
   status: "pending",
 };
+
+const defaultInsertRecords: Record[] = [
+  {
+    total: 400,
+    recordType: "invoice",
+    status: "pending",
+  },
+  {
+    total: 200,
+    recordType: "invoice",
+    status: "completed",
+  },
+  {
+    total: 300,
+    recordType: "none",
+    status: "pending",
+  },
+];
 
 // Remove all db records before and after tests to make sure tests aren't flakey.
 beforeAll(async () => {
@@ -18,34 +68,31 @@ afterAll(async () => {
   await db.deleteFrom("payments").execute();
 });
 
-// End point testing the most basic fetching of records.
-describe("Get records", () => {
+describe("Get records no data", () => {
   it("Get no data", async () => {
     const res = await request(app).get("/records");
     expect(res.statusCode).toBe(200);
   });
+});
+
+describe("Get records with single row", () => {
+  beforeAll(async () => {
+    await db.insertInto("payments").values(defaultRecord).execute();
+  });
+  afterAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
 
   it("Manually added row", async () => {
-    db.insertInto("payments")
-      .values({
-        Total: defaultRecord.total,
-        Record_type: defaultRecord.recordType,
-        Status: defaultRecord.status,
-        Create_date: new Date().toISOString(),
-        Modified_date: new Date().toISOString(),
-      })
-      .execute();
-
     const res = await request(app).get("/records");
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveLength(1);
-    console.log(res.body);
     expect(res.body).toEqual([
       {
         id: expect.any(Number),
-        total: defaultRecord.total,
-        recordType: defaultRecord.recordType,
-        status: defaultRecord.status,
+        total: defaultRecord.Total,
+        recordType: defaultRecord.Record_type,
+        status: defaultRecord.Status,
         modifiedDate: expect.any(String),
       },
     ]);
@@ -68,13 +115,27 @@ describe("Get records with filter url params only test response code", () => {
   });
 });
 
-// TODO: Add data and check this was largely boilerplate. I ran out of time.
 describe("Get records with filter url params check data", () => {
+  beforeAll(async () => {
+    await db.insertInto("payments").values(defaultRecords).execute();
+  });
+  afterAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+
   it("Record type param", async () => {
     const res = await request(app).get("/records").query({
-      recordType: "bill",
+      recordType: "invoice",
     });
     expect(res.statusCode).toBe(200);
+    const statusPendingDefaultValues = defaultRecords.filter(
+      (record) => record.Record_type === "invoice"
+    );
+    expect(res.body).toHaveLength(statusPendingDefaultValues.length);
+    const hasInvoiceRecordType = res.body.every(
+      (record: any) => record.recordType === "invoice"
+    );
+    expect(hasInvoiceRecordType).toBe(true);
   });
 
   it("Status param", async () => {
@@ -82,16 +143,206 @@ describe("Get records with filter url params check data", () => {
       status: "pending",
     });
     expect(res.statusCode).toBe(200);
+    const statusPendingDefaultValues = defaultRecords.filter(
+      (record) => record.Status === "pending"
+    );
+    expect(res.body).toHaveLength(statusPendingDefaultValues.length);
+    const hasPendingStatus = res.body.every(
+      (record: any) => record.status === "pending"
+    );
+    expect(hasPendingStatus).toBe(true);
   });
 
-  it("Both params", async () => {
+  it("Record type and status params", async () => {
     const res = await request(app).get("/records").query({
+      recordType: "invoice",
       status: "pending",
-      recordType: "bill",
     });
     expect(res.statusCode).toBe(200);
+    const statusPendingDefaultValues = defaultRecords.filter(
+      (record) =>
+        record.Record_type === "invoice" && record.Status === "pending"
+    );
+    expect(res.body).toHaveLength(statusPendingDefaultValues.length);
+    const hasInvoiceRecordTypeAndPendingStatus = res.body.every(
+      (record: any) =>
+        record.recordType === "invoice" && record.status === "pending"
+    );
+    expect(hasInvoiceRecordTypeAndPendingStatus).toBe(true);
   });
 });
 
-describe("Adding records", () => {});
-describe("Adding invalid records", () => {});
+describe("Getting records with invalid url parameter values", () => {
+  it("Invalid record type", async () => {
+    const res = await request(app).get("/records").query({
+      recordType: "invalid",
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it("Invalid status", async () => {
+    const res = await request(app).get("/records").query({
+      status: "invalid",
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+});
+
+describe("Adding records", () => {
+  beforeAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterEach(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+
+  it("Add a single record", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([defaultInsertRecord])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(201);
+
+    const records = await db.selectFrom("payments").selectAll().execute();
+    expect(records).toHaveLength(1);
+  });
+
+  it("Add multiple records", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send(defaultInsertRecords)
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(201);
+
+    const records = await db.selectFrom("payments").selectAll().execute();
+    expect(records).toHaveLength(defaultInsertRecords.length);
+  });
+});
+
+describe("Adding invalid records", () => {
+  beforeAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterEach(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+
+  it("Add a single record with invalid data", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: "invalid", recordType: "bill", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("Add multiple records with invalid data", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([
+        { total: "invalid", recordType: "bill", status: "pending" },
+        { total: 200, recordType: "invoice", status: "completed" },
+      ])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("Add a single record with invalid record type", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: 100, recordType: "invalid", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("Add a single record with invalid status", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: 100, recordType: "bill", status: "invalid" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("Add a single record with missing total", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ recordType: "bill", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeDefined();
+    expect(res.body.error).toBe(
+      "Invalid data format. ✖ Invalid input: expected number, received undefined\n  → at [0].total"
+    );
+  });
+
+  it("Add a single record with null total", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: null, recordType: "bill", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeDefined();
+    expect(res.body.error).toBe(
+      "Invalid data format. ✖ Invalid input: expected number, received null\n  → at [0].total"
+    );
+  });
+
+  // The failed transition logic in record.routes.ts cannot be triggered because the input is validated beforehand, ensuring invalid data never reaches that point.
+  it("Add a mix of valid and invalid records", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([
+        { total: 100, recordType: "bill", status: "pending" },
+        { total: "invalid", recordType: "invoice", status: "completed" },
+        { total: 200, recordType: "none", status: "pending" },
+      ])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeDefined();
+    const records = await db.selectFrom("payments").selectAll().execute();
+    expect(records).toHaveLength(0);
+  });
+});
+
+describe("Adding records with total more than 3 decimal places", () => {
+  beforeAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterEach(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+
+  it("Add a single record with total more than 3 decimal places", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: 100.12345, recordType: "bill", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(201);
+
+    const records = await db.selectFrom("payments").selectAll().execute();
+    expect(records).toHaveLength(1);
+    expect(records[0].Total).toBeCloseTo(100.12, 2);
+  });
+
+  it("Add a single record with total more than 3 decimal places, rounding down", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: 100.1274, recordType: "bill", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(201);
+
+    const records = await db.selectFrom("payments").selectAll().execute();
+    expect(records).toHaveLength(1);
+    expect(records[0].Total).toBeCloseTo(100.13, 2);
+  });
+});

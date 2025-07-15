@@ -4,7 +4,7 @@
  * But with the time crunch this is a faster solution.
  */
 
-import { Generated, Selectable } from "kysely";
+import { Generated, Selectable, Insertable } from "kysely";
 
 export interface Database {
   payments: PaymentsTable;
@@ -20,3 +20,4 @@ export interface PaymentsTable {
 }
 
 export type SelectablePaymentsTable = Selectable<PaymentsTable>;
+export type InsertablePaymentsTable = Insertable<PaymentsTable>;
