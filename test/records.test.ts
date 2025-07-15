@@ -10,15 +10,16 @@ const defaultRecord: Record = {
   status: "pending",
 };
 
+// Remove all db records before and after tests to make sure tests aren't flakey.
 beforeAll(async () => {
   await db.deleteFrom("payments").execute();
 });
-
 afterAll(async () => {
   await db.deleteFrom("payments").execute();
 });
 
-describe("Getting records", () => {
+// End point testing the most basic fetching of records.
+describe("Get records", () => {
   it("Get no data", async () => {
     const res = await request(app).get("/records");
     expect(res.statusCode).toBe(200);
@@ -51,7 +52,7 @@ describe("Getting records", () => {
   });
 });
 
-describe("Get records with filter input", () => {
+describe("Get records with filter url params only test response code", () => {
   it("Record type param", async () => {
     const res = await request(app).get("/records").query({
       recordType: "bill",
@@ -67,7 +68,8 @@ describe("Get records with filter input", () => {
   });
 });
 
-describe("Get records with filter returned values", () => {
+// TODO: Add data and check this was largely boilerplate. I ran out of time.
+describe("Get records with filter url params check data", () => {
   it("Record type param", async () => {
     const res = await request(app).get("/records").query({
       recordType: "bill",

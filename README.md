@@ -14,3 +14,21 @@ dev sever
 
 tests  
 `npm test`
+
+## Future work - tests
+
+Sadly the two hours have finished.
+I would have written many more tests had a I had the time.
+
+- filter params with data
+  - Status filter
+  - RecordType filter
+  - Both Status and RecordType together
+- Get record has total at 2dp
+- Adding single record
+- Adding multiple records
+- Adding invalid records
+  - Record with invalid RecordType value
+  - Test with missing fields
+  - Record with extra fields
+  - Test None total value
