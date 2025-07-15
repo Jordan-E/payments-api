@@ -6,7 +6,7 @@ import { Kysely, SqliteDialect } from "kysely";
 // This is also very useful for testing purposes.
 // https://kysely.dev/docs/intro
 const dialect = new SqliteDialect({
-  database: new SQLite(".database.db"),
+  database: new SQLite("./database.db"),
 });
 
 export const db = new Kysely<Database>({
