@@ -1,4 +1,5 @@
 import { db } from "../src/db/database";
+import { app } from "../src/index";
 
 beforeAll(async () => {
   await db.deleteFrom("payments").execute();
