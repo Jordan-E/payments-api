@@ -265,6 +265,18 @@ describe("Adding invalid records", () => {
       "Invalid data format. ✖ Invalid input: expected number, received undefined\n  → at [0].total"
     );
   });
+
+  it("Add a single record with null total", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: null, recordType: "bill", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeDefined();
+    expect(res.body.error).toBe(
+      "Invalid data format. ✖ Invalid input: expected number, received null\n  → at [0].total"
+    );
+  });
 });
 
 describe("Adding records with total more than 3 decimal places", () => {
