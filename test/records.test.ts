@@ -2,6 +2,7 @@ import { db } from "../src/db/database";
 import { app } from "../src/index";
 import request from "supertest";
 import { Record } from "../src/models/records.model";
+import { record } from "zod";
 
 const defaultRecord: Record = {
   total: 100,
@@ -39,6 +40,38 @@ describe("Getting records", () => {
     expect(res.body).toHaveLength(1);
   });
 });
-describe("Get records with filter", () => {});
+
+describe("Get records with filter input", () => {
+  it("Record type param", async () => {
+    const res = await request(app).get("/records").query({
+      recordType: "bill",
+    });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("Status param", async () => {
+    const res = await request(app).get("/records").query({
+      status: "pending",
+    });
+    expect(res.statusCode).toBe(200);
+  });
+});
+
+describe("Get records with filter returned values", () => {
+  it("Record type param", async () => {
+    const res = await request(app).get("/records").query({
+      recordType: "bill",
+    });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("Status param", async () => {
+    const res = await request(app).get("/records").query({
+      status: "pending",
+    });
+    expect(res.statusCode).toBe(200);
+  });
+});
+
 describe("Adding records", () => {});
 describe("Adding invalid records", () => {});

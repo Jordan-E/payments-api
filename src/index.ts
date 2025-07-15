@@ -1,4 +1,6 @@
 import express, { Request, Response, json } from "express";
+import { RecordTypeSchema, StatusSchema } from "./models/records.model";
+import { db } from "./db/database";
 
 export const app = express();
 
@@ -18,11 +20,23 @@ app.get("/", (_req: Request, res: Response) => {
  * @param status - Status of the record to filter by.
  */
 app.get("/records", async (req: Request, res: Response) => {
-  req.query.recordType;
-  req.query.status;
+  const recordType = RecordTypeSchema.safeParse(req.query.recordType);
+  if (!recordType.success)
+    return res.status(400).json({ error: "Invalid record type" });
 
-  throw new Error("To be implemented");
-  res.status(200).json({});
+  const status = StatusSchema.safeParse(req.query.status);
+  if (!status.success) return res.status(400).json({ error: "Invalid status" });
+
+  const records = await db.selectFrom("payments").selectAll().execute();
+
+  const formattedRecord = records.map((record) => ({
+    total: record.total,
+    recordType: record.record_type,
+    status: record.status,
+    modifiedDate: record.modified_date,
+  }));
+
+  res.status(200).json(formattedRecord);
 });
 
 /**
