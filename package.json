@@ -1,0 +1,31 @@
+{
+  "name": "payments-api",
+  "version": "1.0.0",
+  "description": "A simple TS REST API. Used to interact with a payments db table.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jordan-E/payments-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "homepage": "https://github.com/Jordan-E/payments-api#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "jest": "^30.0.4",
+    "kysely": "^0.28.2",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.13",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
