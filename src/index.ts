@@ -31,7 +31,12 @@ app.get("/records", async (req: Request, res: Response) => {
 
   let records: SelectablePaymentsTable[] | undefined = undefined;
   try {
-    records = await db.selectFrom("payments").selectAll().execute();
+    const query = db.selectFrom("payments").selectAll();
+
+    if (recordType.data) query.where("record_type", "=", recordType.data);
+    if (status.data) query.where("status", "=", status.data);
+
+    records = await query.execute();
   } catch (error) {
     console.error("Database query error:", error);
     return res.status(500).json({ error: "Query Error" });
