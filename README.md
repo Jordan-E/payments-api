@@ -5,8 +5,12 @@ Used to interact with a payments db table.
 
 ## To run
 
-dev sever
+To create the in memory db  
+`npm run db`  
+Once this has run you should see a database.db file in the project root
+
+dev sever  
 `npm run dev`
 
-tests
+tests  
 `npm test`
