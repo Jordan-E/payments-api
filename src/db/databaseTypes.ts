@@ -11,12 +11,12 @@ export interface Database {
 }
 
 export interface PaymentsTable {
-  id: Generated<number>;
-  total: number;
-  record_type: "invoice" | "bill" | "none";
-  status: "pending" | "void" | "completed";
-  create_date: string;
-  modified_date: string;
+  ID: Generated<number>;
+  Total: number;
+  Record_type: "invoice" | "bill" | "none";
+  Status: "pending" | "void" | "completed";
+  Create_date: string;
+  Modified_date: string;
 }
 
 export type SelectablePaymentsTable = Selectable<PaymentsTable>;

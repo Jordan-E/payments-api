@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 const RecordSchema = z.object({
-  total: z.number(),
+  total: z
+    .number()
+    // Round total to two decimal places.
+    // From https://stackoverflow.com/questions/59480096/how-to-round-to-2-decimal-places-with-typescript
+    .transform((val) => parseFloat((Math.round(val * 100) / 100).toFixed(2))),
   recordType: z.enum(["invoice", "bill", "none"]),
   status: z.enum(["pending", "void", "completed"]),
 });

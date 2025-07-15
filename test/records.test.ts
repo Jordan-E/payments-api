@@ -27,17 +27,27 @@ describe("Getting records", () => {
   it("Manually added row", async () => {
     db.insertInto("payments")
       .values({
-        total: defaultRecord.total,
-        record_type: defaultRecord.recordType,
-        status: defaultRecord.status,
-        create_date: new Date().toISOString(),
-        modified_date: new Date().toISOString(),
+        Total: defaultRecord.total,
+        Record_type: defaultRecord.recordType,
+        Status: defaultRecord.status,
+        Create_date: new Date().toISOString(),
+        Modified_date: new Date().toISOString(),
       })
       .execute();
 
-    const res = await request(app).get("/records").query({});
+    const res = await request(app).get("/records");
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveLength(1);
+    console.log(res.body);
+    expect(res.body).toEqual([
+      {
+        id: expect.any(Number),
+        total: defaultRecord.total,
+        recordType: defaultRecord.recordType,
+        status: defaultRecord.status,
+        modifiedDate: expect.any(String),
+      },
+    ]);
   });
 });
 

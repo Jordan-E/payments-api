@@ -2,6 +2,7 @@ import express, { Request, Response, json } from "express";
 import { RecordTypeSchema, StatusSchema } from "./models/records.model";
 import { db } from "./db/database";
 import { SelectablePaymentsTable } from "./db/databaseTypes";
+import { logger } from "./utils/logger";
 
 export const app = express();
 
@@ -21,6 +22,8 @@ app.get("/", (_req: Request, res: Response) => {
  * @param status - Status of the record to filter by.
  */
 app.get("/records", async (req: Request, res: Response) => {
+  logger.info("Records get endpoint");
+
   const recordType = RecordTypeSchema.safeParse(req.query.recordType);
   if (req.query.recordType && !recordType.success)
     return res.status(400).json({ error: "Invalid record type" });
@@ -30,26 +33,31 @@ app.get("/records", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid status" });
 
   let records: SelectablePaymentsTable[] | undefined = undefined;
+  const query = db.selectFrom("payments").selectAll();
+
+  if (recordType.data) query.where("Record_type", "=", recordType.data);
+  if (status.data) query.where("Status", "=", status.data);
+
   try {
-    const query = db.selectFrom("payments").selectAll();
-
-    if (recordType.data) query.where("record_type", "=", recordType.data);
-    if (status.data) query.where("status", "=", status.data);
-
     records = await query.execute();
   } catch (error) {
-    console.error("Database query error:", error);
+    logger.error("Error executing query:", error);
     return res.status(500).json({ error: "Query Error" });
   }
 
-  const formattedRecord = records.map((record) => ({
-    total: record.total,
-    recordType: record.record_type,
-    status: record.status,
-    modifiedDate: record.modified_date,
-  }));
+  const formattedRecord = records.map((rec) => {
+    return {
+      id: rec.ID,
+      total: rec.Total,
+      recordType: rec.Record_type,
+      status: rec.Status,
+      modifiedDate: rec.Modified_date,
+    };
+  });
 
-  res.status(200).json(formattedRecord);
+  logger.debug("Formatted records:", formattedRecord);
+
+  return res.status(200).json(formattedRecord);
 });
 
 /**
