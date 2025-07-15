@@ -207,4 +207,62 @@ describe("Adding records", () => {
     expect(records).toHaveLength(defaultInsertRecords.length);
   });
 });
-describe("Adding invalid records", () => {});
+
+describe("Adding invalid records", () => {
+  beforeAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterEach(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+
+  it("Add a single record with invalid data", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: "invalid", recordType: "bill", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("Add multiple records with invalid data", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([
+        { total: "invalid", recordType: "bill", status: "pending" },
+        { total: 200, recordType: "invoice", status: "completed" },
+      ])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("Add a single record with invalid record type", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: 100, recordType: "invalid", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("Add a single record with invalid status", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: 100, recordType: "bill", status: "invalid" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("Add a single record with missing total", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ recordType: "bill", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeDefined();
+    expect(res.body.error).toBe(
+      "Invalid data format. ✖ Invalid input: expected number, received undefined\n  → at [0].total"
+    );
+  });
+});
