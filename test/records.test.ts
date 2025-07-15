@@ -71,6 +71,14 @@ describe("Get records with filter returned values", () => {
     });
     expect(res.statusCode).toBe(200);
   });
+
+  it("Both params", async () => {
+    const res = await request(app).get("/records").query({
+      status: "pending",
+      recordType: "bill",
+    });
+    expect(res.statusCode).toBe(200);
+  });
 });
 
 describe("Adding records", () => {});
