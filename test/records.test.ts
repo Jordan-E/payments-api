@@ -172,6 +172,24 @@ describe("Get records with filter url params check data", () => {
   });
 });
 
+describe("Getting records with invalid url parameter values", () => {
+  it("Invalid record type", async () => {
+    const res = await request(app).get("/records").query({
+      recordType: "invalid",
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it("Invalid status", async () => {
+    const res = await request(app).get("/records").query({
+      status: "invalid",
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+});
+
 describe("Adding records", () => {
   beforeAll(async () => {
     await db.deleteFrom("payments").execute();
@@ -276,7 +294,7 @@ describe("Adding invalid records", () => {
     );
   });
 
-  // test adding one record that is valid one that is not and then another that is
+  // The failed transition logic in record.routes.ts cannot be triggered because the input is validated beforehand, ensuring invalid data never reaches that point.
   it("Add a mix of valid and invalid records", async () => {
     const res = await request(app)
       .post("/records")
