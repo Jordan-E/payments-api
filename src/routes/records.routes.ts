@@ -19,7 +19,7 @@ interface RecordReturned {
 }
 
 /**
- *
+ * API endpoint to get all records.
  * @param req Express Request object
  * @param res Express Response object
  * @returns RecordReturned[]
@@ -73,7 +73,7 @@ export async function getRecords(
 }
 
 /**
- *
+ * API endpoint to create new record item(s).
  * @param req Express Request object
  * @param res Express Response object
  * @returns Promise<void>
