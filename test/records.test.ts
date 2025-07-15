@@ -266,3 +266,39 @@ describe("Adding invalid records", () => {
     );
   });
 });
+
+describe("Adding records with total more than 3 decimal places", () => {
+  beforeAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterAll(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+  afterEach(async () => {
+    await db.deleteFrom("payments").execute();
+  });
+
+  it("Add a single record with total more than 3 decimal places", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: 100.12345, recordType: "bill", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(201);
+
+    const records = await db.selectFrom("payments").selectAll().execute();
+    expect(records).toHaveLength(1);
+    expect(records[0].Total).toBeCloseTo(100.12, 2);
+  });
+
+  it("Add a single record with total more than 3 decimal places, rounding down", async () => {
+    const res = await request(app)
+      .post("/records")
+      .send([{ total: 100.1274, recordType: "bill", status: "pending" }])
+      .set("Content-Type", "application/json");
+    expect(res.statusCode).toBe(201);
+
+    const records = await db.selectFrom("payments").selectAll().execute();
+    expect(records).toHaveLength(1);
+    expect(records[0].Total).toBeCloseTo(100.13, 2);
+  });
+});
