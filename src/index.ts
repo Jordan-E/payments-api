@@ -24,6 +24,7 @@ app.get("/", (_req: Request, res: Response) => {
 app.get("/records", async (req: Request, res: Response) => {
   logger.info("Records get endpoint");
 
+  // Parsing zod record type
   const recordType = RecordTypeSchema.safeParse(req.query.recordType);
   if (req.query.recordType && !recordType.success)
     return res.status(400).json({ error: "Invalid record type" });
